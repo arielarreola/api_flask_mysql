@@ -6,8 +6,10 @@ import math
 from werkzeug.exceptions import HTTPException
 import urllib
 import pyodbc
+from flask_cors import CORS
 
 app = Flask(__name__)
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
 #-app.config['SQLALCHEMY_DATABASE_URI'] = 'mssql+pyodbc://DESKTOP-N9KIAT/ariel_mario@<Host>:<Port>/LendApp'
 #params = urllib.parse.quote_plus('DRIVER={SQL Server};SERVER=DESKTOP-N9PKIAT;DATABASE=ariel_mario;Trusted_Connection=yes;')
 #app.config['SQLALCHEMY_DATABASE_URI'] = "mssql+pyodbc:///?odbc_connect=%s" % params
@@ -90,7 +92,9 @@ semesters_schema = semester_schema_model(many=True)
 #Sección de semester, autor: Ariel Arreola
 #####################
 ####################
-
+@app.route('/', methods=['GET'])
+def main_api():
+    return jsonify({"message":"You are in flask-mysql-api"})
 
 @app.route('/semester', methods=['Post'])
 def create_sem():
@@ -120,23 +124,18 @@ def create_sem():
 
 @app.route('/semester', methods=['GET'])
 def get_sems():
-    if not (request.args):
-        all_sem = semester.query.all()
-        result = semesters_schema.dump(all_sem)
-        return jsonify(result)
-    else:
-        page_pag=request.args.get('page', 1, type = int)
-        limit_pag=request.args.get('limit', 1, type = int)
-        category_param_value = request.args.get('like','')
-        rows=db.session.query(semester.id).count()
-        total_pages=math.ceil(rows/limit_pag)
-        searchlike = semester.query.filter(semester.career.like(category_param_value + "%")).all()
-        all_sem= semester.query.paginate(page_pag,limit_pag, False)#.filter(semester.message.match("%{}%".format(tag))).all()
-        offset=limit_pag*(page_pag-1)
-        result = semesters_schema.dump(all_sem.items)
-        search = semesters_schema.dump(searchlike)
-        return jsonify({"limit":limit_pag,"current_page":page_pag,"data":search,"total_elements":rows,"total_pags":total_pages,
-        "offset":offset})
+    page_pag=request.args.get('page', 1, type = int)
+    limit_pag=request.args.get('limit', 1, type = int)
+    category_param_value = request.args.get('like','')
+    rows=db.session.query(semester.id).count()
+    total_pages=math.ceil(rows/limit_pag)
+    searchlike = semester.query.filter(semester.career.like(category_param_value + "%")).paginate(page_pag,limit_pag, False)
+    #all_sem= semester.query.paginate(page_pag,limit_pag, False)#.filter(semester.message.match("%{}%".format(tag))).all()
+    offset=limit_pag*(page_pag-1)
+    #result = semesters_schema.dump(all_sem.items)
+    search = semesters_schema.dump(searchlike.items)
+    return jsonify({"limit":limit_pag,"current_page":page_pag,"data":search,"total_elements":rows,"total_pags":total_pages,
+    "offset":offset})
 
 @app.route('/semester/<id>', methods=['GET'])
 def get_sem(id):
@@ -262,24 +261,20 @@ def create_career():
 
 @app.route('/career', methods=['GET'])
 def get_careers():
-    if not (request.args):
-        all_car = career.query.all()
-        result = careers_schema.dump(all_car)
-        return jsonify(result)
-    else: 
-        page_pag=request.args.get('page', 1, type = int)
-        limit_pag=request.args.get('limit', 1, type = int)
-        category_param_value = request.args.get('like','')
-        rows=db.session.query(career.id_career).count()
-        total_pages=math.ceil(rows/limit_pag)
-        searchlike = career.query.filter(career.career_name.like("%"+ category_param_value + "%")).all()
+ 
+    page_pag=request.args.get('page', 1, type = int)
+    limit_pag=request.args.get('limit', 1, type = int)
+    category_param_value = request.args.get('like','')
+    rows=db.session.query(career.id_career).count()
+    total_pages=math.ceil(rows/limit_pag)
+    searchlike = career.query.filter(career.career_name.like("%"+ category_param_value + "%")).paginate(page_pag,limit_pag, False)
 
-        all_car= career.query.paginate(page_pag,limit_pag, False)
-        offset=limit_pag*(page_pag-1)
-        result = careers_schema.dump(all_car.items)
-        search = careers_schema.dump(searchlike)
-        return jsonify({"limit":limit_pag,"current_page":page_pag,"data":search,"total_elements":rows,"total_pags":total_pages,
-        "offset":offset})
+    #all_car= career.query.paginate(page_pag,limit_pag, False)
+    offset=limit_pag*(page_pag-1)
+    #result = careers_schema.dump(all_car.items)
+    search = careers_schema.dump(searchlike.items)
+    return jsonify({"limit":limit_pag,"current_page":page_pag,"data":search,"total_elements":rows,"total_pags":total_pages,
+    "offset":offset})
 
 @app.route('/career/<id>', methods=['GET'])
 def get_career(id):
