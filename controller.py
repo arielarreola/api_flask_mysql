@@ -4,18 +4,10 @@ from flask_marshmallow import Marshmallow
 from flask import Flask, jsonify, request
 import math
 from werkzeug.exceptions import HTTPException
-import urllib
-import pyodbc
 from flask_cors import CORS
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
-#-app.config['SQLALCHEMY_DATABASE_URI'] = 'mssql+pyodbc://DESKTOP-N9KIAT/ariel_mario@<Host>:<Port>/LendApp'
-#params = urllib.parse.quote_plus('DRIVER={SQL Server};SERVER=DESKTOP-N9PKIAT;DATABASE=ariel_mario;Trusted_Connection=yes;')
-#app.config['SQLALCHEMY_DATABASE_URI'] = "mssql+pyodbc:///?odbc_connect=%s" % params
-#app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
-
-
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:pass@localhost/flaskmysql'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
