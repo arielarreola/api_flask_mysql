@@ -14,5 +14,5 @@ pytz==2020.1
 six==1.15.0
 Babel==2.8.1
 Flask-MySQL==1.5.2
-Jinja2==2.10.3
+Jinja2==3.0.2
 Flask-Babel==2.0.0
