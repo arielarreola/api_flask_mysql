@@ -8,7 +8,7 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://flaskmysql:flaskmysql@http://slashwebmariadb.cyuazzw9rdsu.us-east-1.rds.amazonaws.com/flaskmysql'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://flaskmysql:flaskmysql@slashwebmariadb.cyuazzw9rdsu.us-east-1.rds.amazonaws.com/flaskmysql'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_POOL_TIMEOUT'] = None
 db = SQLAlchemy(app)
