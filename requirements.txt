@@ -5,3 +5,8 @@ flask-marshmallow==0.14.0
 Flask==2.0.2
 Flask-Cors==3.0.10
 Werkzeug==2.0.2
+click==8.0.3
+itsdangerous==2.0.1
+Jinja2==2.0.3
+MarkupSafe==2.0.1
+
