@@ -117,7 +117,7 @@ def create_sem():
 @app.route('/semester', methods=['GET'])
 def get_sems():
     page_pag=request.args.get('page', 1, type = int)
-    limit_pag=request.args.get('limit', 1, type = int)
+    limit_pag=request.args.get('limit', 3, type = int)
     category_param_value = request.args.get('like','')
     rows=db.session.query(semester.id).count()
     total_pages=math.ceil(rows/limit_pag)
@@ -255,7 +255,7 @@ def create_career():
 def get_careers():
  
     page_pag=request.args.get('page', 1, type = int)
-    limit_pag=request.args.get('limit', 1, type = int)
+    limit_pag=request.args.get('limit', 3, type = int)
     category_param_value = request.args.get('like','')
     rows=db.session.query(career.id_career).count()
     total_pages=math.ceil(rows/limit_pag)
