@@ -5,10 +5,13 @@ from flask import Flask, jsonify, request
 import math
 from werkzeug.exceptions import HTTPException
 from flask_cors import CORS
+import requests
+
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://flaskmysql:flaskmysql@slashwebmariadb.cyuazzw9rdsu.us-east-1.rds.amazonaws.com/flaskmysql'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:pass@localhost/flaskmysql'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_POOL_TIMEOUT'] = None
 db = SQLAlchemy(app)
@@ -39,6 +42,13 @@ class semester(db.Model):
         self.type_of_pi=type_of_pi
         self.even_or_odd = even_or_odd
 
+class semester_student(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    semester_id = db.Column(db.Integer)
+    student_id= db.Column(db.Integer)
+    def __init__(self,semester_id, student_id):
+        self.semester_id=semester_id
+        self.student_id=student_id
 class career(db.Model):
     id_career = db.Column(db.Integer, primary_key=True)
     type_of_career = db.Column(db.String(70))
@@ -79,6 +89,11 @@ class semester_schema_model(ma.Schema):
 semester_schema = semester_schema_model()
 semesters_schema = semester_schema_model(many=True)
 
+class semester_student_schema_model(ma.Schema):
+    class Meta:
+        fields = ('id','semester_id','student_id')
+semester_student_schema = semester_student_schema_model()
+semesters_students_schema = semester_student_schema_model(many=True)
 ####################
 #####################
 #Sección de semester, autor: Ariel Arreola
@@ -88,6 +103,59 @@ semesters_schema = semester_schema_model(many=True)
 def main_api():
     return jsonify({"message":"You are in flask-mysql-api"})
 
+@app.route('/semesterstudent', methods=['Post'])
+def insert_sem_student():
+    try:
+        semester_id = request.json['semester_id']
+        student_id = request.json['student_id']
+        querysearch=semester.query.filter(semester.id.like(semester_id))
+        search = semesters_students_schema.dump(querysearch)
+        if(len(requests.get('http://crud-nodejs-1.herokuapp.com/students/%s'%(int(student_id))).json())!=0):
+        
+            if search:
+            #aqui debo preguntarle a mariana si el id de alumno es valido
+
+                new_relation=semester_student(semester_id, student_id)
+                db.session.add(new_relation)
+                db.session.commit()  
+                res=semester_student_schema.dump(new_relation)
+                res_notif={"message": "200","data":res}
+                return jsonify(res_notif)
+            else:
+                return jsonify({"message":"This semester doesn't exist"})
+        else:
+            return jsonify({"message":"This student doesn't exist"})
+    except KeyError:
+        return jsonify({"message":"There is a key error, please check variables"})
+@app.route('/semesterstudent/getsemsof/<id>', methods=['get'])
+def select_sems_of_student(id):
+    qres = semester_student.query.with_entities(semester_student.semester_id,semester_student.degree,semester_student.semester_num,semester_student.career).filter(semester_student.student_id.like(id))
+    res=semesters_students_schema.jsonify(qres)
+    if(res):
+        return res
+    else:
+        response= {
+        "message":"There was an error in ID, please check"
+    }   
+        return jsonify(response) 
+@app.route('/semesterstudent/getstudentsof/<id>', methods=['get'])
+def select_students_of_sem(id):
+    queryres = semester_student.query.with_entities(semester_student.student_id).filter(semester_student.semester_id.like(id))
+    res=semesters_students_schema.jsonify(queryres)
+
+    print("Type:",type(res))
+    #print("1",res.student_id)
+    #print("2",res.student_id)
+    #for i in len(res):
+     #   array.append(res[student_id])
+    #print('Resultado',res)
+    if(res):
+        return res
+    else:
+        response= {
+        "message":"There was an error in ID, please check"
+    }   
+        return jsonify(response) 
 @app.route('/semester', methods=['Post'])
 def create_sem():
     try:
