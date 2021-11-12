@@ -8,7 +8,6 @@ from flask_cors import CORS
 import requests
 import gunicorn
 
-
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://flaskmysql:flaskmysql@slashwebmariadb.cyuazzw9rdsu.us-east-1.rds.amazonaws.com/flaskmysql'
@@ -130,28 +129,33 @@ def insert_sem_student():
         return jsonify({"message":"There is a key error, please check variables"})
 @app.route('/semesterstudent/getsemsof/<id>', methods=['get'])
 def select_sems_of_student(id):
-    qres = semester_student.query.with_entities(semester_student.semester_id,semester_student.degree,semester_student.semester_num,semester_student.career).filter(semester_student.student_id.like(id))
-    res=semesters_students_schema.jsonify(qres)
-    if(res):
-        return res
+    qres = semester_student.query.with_entities(semester_student.semester_id).filter(semester_student.student_id.like(id))
+    res=semesters_students_schema.dump(qres)
+
+    if(len(res)!=0):
+
+        array=list()
+        arrayres=list()
+        for i in range(len(res)):
+            array.append(res[i]["semester_id"])
+        for k in range(len(array)):
+            sem1 = semester.query.filter(semester.id.like(array[k]))
+            arrayres.append(semesters_schema.dump(sem1)[0])
+        return str(arrayres)
     else:
         response= {
-        "message":"There was an error in ID, please check"
+        "message":"This student_id are not registred in semesters_student"
     }   
         return jsonify(response) 
 @app.route('/semesterstudent/getstudentsof/<id>', methods=['get'])
 def select_students_of_sem(id):
     queryres = semester_student.query.with_entities(semester_student.student_id).filter(semester_student.semester_id.like(id))
-    res=semesters_students_schema.jsonify(queryres)
-
-    print("Type:",type(res))
-    #print("1",res.student_id)
-    #print("2",res.student_id)
-    #for i in len(res):
-     #   array.append(res[student_id])
-    #print('Resultado',res)
-    if(res):
-        return res
+    res=semesters_students_schema.dump(queryres)
+    if(len(res)!=0):
+        array=list()
+        for i in range(len(res)):
+            array.append(res[i]["student_id"])
+        return str(array)
     else:
         response= {
         "message":"There was an error in ID, please check"
