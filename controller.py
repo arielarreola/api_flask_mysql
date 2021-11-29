@@ -49,6 +49,8 @@ class semester_student(db.Model):
     def __init__(self,semester_id, student_id):
         self.semester_id=semester_id
         self.student_id=student_id
+
+
 class career(db.Model):
     id_career = db.Column(db.Integer, primary_key=True)
     type_of_career = db.Column(db.String(70))
@@ -60,6 +62,7 @@ class career(db.Model):
     career_mod=db.Column(db.String(70))
     rvoe_sep=db.Column(db.Integer)
     dgp=db.Column(db.Integer)
+    career_code=db.Column(db.String(3))
     def __init__(self,type_of_career,knowledge_area,career_name,id_study_plan,coord,
     number_of_semesters,career_mod,rvoe_sep,dgp):
         self.type_of_career = type_of_career
@@ -78,7 +81,7 @@ db.create_all()
 class career_schema_model(ma.Schema):
     class Meta:
         fields = ('id_career','type_of_career','knowledge_area',
-        'career_name','id_study_plan','coord','number_of_semesters','career_mod','rvoe_sep','dgp')
+        'career_name','id_study_plan','coord','number_of_semesters','career_mod','rvoe_sep','dgp','career_code')
 career_schema = career_schema_model()
 careers_schema = career_schema_model(many=True)
 
@@ -266,7 +269,7 @@ def update_sem(id):
 
             db.session.commit()
             res= semester_schema.dump(sem)
-            res_notif={"message": "This data has been added successfully","data":res}
+            res_notif={"message": "This data has been updated successfully","data":res}
             return jsonify(res_notif)
         else:
             response= {
@@ -312,8 +315,9 @@ def create_career():
         career_mod = request.json['career_mod']
         rvoe_sep= request.json['rvoe_sep']
         dgp = request.json['dgp']
+        career_code = request.json['career_code']
 
-        new_career= career(type_of_career,knowledge_area,career_name,id_study_plan,coord,number_of_semesters,career_mod,rvoe_sep,dgp)
+        new_career= career(type_of_career,knowledge_area,career_name,id_study_plan,coord,number_of_semesters,career_mod,rvoe_sep,dgp,career_code)
 
         db.session.add(new_career)
         db.session.commit()
@@ -348,7 +352,12 @@ def get_career(id):
         return career_schema.jsonify(car)
     return jsonify({"message":"There was an error in ID, please check"}) 
 
-
+@app.route('/career/<code>', methods=['GET'])
+def get_career2(code):
+    car = career.query.filter(career.career_code.like('cib'))
+    if(car):
+        return career_schema.jsonify(car)
+    return jsonify({"message":"There was an error in ID, please check"}) 
 
 @app.route('/career/<id>', methods=['PUT'])
 def update_career(id):
