@@ -29,8 +29,9 @@ class semester(db.Model):
     building=db.Column(db.String(70))
     type_of_pi=db.Column(db.String(70))
     even_or_odd=db.Column(db.String(70))
+    career_code=db.Column(db.String(3))
     def __init__(self,degree,study_plan_id,semester_num,career,number_of_assignatures,
-    classroom,building,type_of_pi,even_or_odd):
+    classroom,building,type_of_pi,even_or_odd,career_code):
         self.degree = degree
         self.study_plan_id=study_plan_id
         self.semester_num=semester_num
@@ -41,7 +42,7 @@ class semester(db.Model):
         
         self.type_of_pi=type_of_pi
         self.even_or_odd = even_or_odd
-
+        self.career_code=career_code
 class semester_student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     semester_id = db.Column(db.Integer)
@@ -88,7 +89,7 @@ careers_schema = career_schema_model(many=True)
 class semester_schema_model(ma.Schema):
     class Meta:
         fields = ('id','degree','study_plan_id','semester_num',
-        'career','number_of_assignatures','classroom','building','type_of_pi','even_or_odd')
+        'career','number_of_assignatures','classroom','building','type_of_pi','even_or_odd','career_code')
 semester_schema = semester_schema_model()
 semesters_schema = semester_schema_model(many=True)
 
@@ -176,9 +177,10 @@ def create_sem():
         building = request.json['building']
         type_of_pi= request.json['type_of_pi']
         even_or_odd = request.json['even_or_odd']
+        career_code=request.json['career_code']
 
 
-        new_semester= semester(degree,study_plan_id,semester_num,career,number_of_assignatures,classroom,building,type_of_pi,even_or_odd)
+        new_semester= semester(degree,study_plan_id,semester_num,career,number_of_assignatures,classroom,building,type_of_pi,even_or_odd,career_code)
 
         db.session.add(new_semester)
         db.session.commit()  
@@ -256,7 +258,7 @@ def update_sem(id):
             building = request.json['building']
             type_of_pi = request.json['type_of_pi']
             even_or_odd = request.json['even_or_odd']
-
+            career_code = request.json['career_code']
             sem.degree = degree
             sem.study_plan_id = study_plan_id
             sem.semester_num = semester_num
@@ -266,6 +268,7 @@ def update_sem(id):
             sem.building  = building 
             sem.type_of_pi = type_of_pi
             sem.even_or_odd = even_or_odd
+            sem.career_code=career_code
 
             db.session.commit()
             res= semester_schema.dump(sem)
@@ -352,12 +355,6 @@ def get_career(id):
         return career_schema.jsonify(car)
     return jsonify({"message":"There was an error in ID, please check"}) 
 
-@app.route('/career/<code>', methods=['GET'])
-def get_career2(code):
-    car = career.query.filter(career.career_code.like('cib'))
-    if(car):
-        return career_schema.jsonify(car)
-    return jsonify({"message":"There was an error in ID, please check"}) 
 
 @app.route('/career/<id>', methods=['PUT'])
 def update_career(id):
@@ -373,7 +370,7 @@ def update_career(id):
             career_mod = request.json['career_mod']
             rvoe_sep= request.json['rvoe_sep']
             dgp = request.json['dgp']
-
+            career_code=request.json['career_code']
             car.type_of_career = type_of_career
             car.knowledge_area = knowledge_area
             car.career_name = career_name
@@ -383,6 +380,7 @@ def update_career(id):
             car.career_mod  = career_mod 
             car.rvoe_sep = rvoe_sep
             car.dgp = dgp
+            car.career_code=career_code
 
             db.session.commit()
             res=career_schema.dump(car)
