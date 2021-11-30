@@ -207,16 +207,15 @@ def get_sems():
     return jsonify({"limit":limit_pag,"current_page":page_pag,"data":search,"total_elements":rows,"total_pags":total_pages,
     "offset":offset})
 
-@app.route('/semester/<id>', methods=['GET'])
-def get_sem(id):
-    sem1 = semester.query.get(id)
-    if(sem1):
-        return semester_schema.jsonify(sem1)
-    else:
-        response= {
-        "message":"There was an error in ID, please check"
-    }   
-        return jsonify(response) 
+@app.route('/semester/<semester_num>', methods=['GET'])
+def get_sem(semester_num):
+        #car = career.query.filter(career.career_code.like('%'+career_code+'%'))
+    sem= semester.query.filter_by(semester_num=semester_num).all()
+    print("sem num:",semester_num)
+    if(sem):
+        return semesters_schema.jsonify(sem)
+    return jsonify({"message":"There was an error in ID, please check"}) 
+
 @app.errorhandler(400)
 def handle_exception(e):
     response= {
@@ -348,11 +347,13 @@ def get_careers():
     return jsonify({"limit":limit_pag,"current_page":page_pag,"data":search,"total_elements":rows,"total_pags":total_pages,
     "offset":offset})
 
-@app.route('/career/<id>', methods=['GET'])
-def get_career(id):
-    car = career.query.get(id)
+@app.route('/career/<career_code>', methods=['GET'])
+def get_career(career_code):
+    #car = career.query.filter(career.career_code.like('%'+career_code+'%'))
+    car = career.query.filter_by(career_code=career_code).all()
+    print("CAREER CODE:",career_code)
     if(car):
-        return career_schema.jsonify(car)
+        return career_schema.jsonify(car[0])
     return jsonify({"message":"There was an error in ID, please check"}) 
 
 
