@@ -114,7 +114,7 @@ def insert_sem_student():
         student_id = request.json['student_id']
         querysearch=semester.query.filter(semester.id.like(semester_id))
         search = semesters_students_schema.dump(querysearch)
-        if(len(requests.get('http://crud-nodejs-1.herokuapp.com/students/%s'%(int(student_id))).json())!=0):
+        if(len(requests.get('http://crud-nodejs-1.herokuapp.com/allstudents/%s'%(int(student_id))).json())!=0):
         
             if search:
             #aqui debo preguntarle a mariana si el id de alumno es valido
