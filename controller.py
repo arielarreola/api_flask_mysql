@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, make_response
 import math
 from werkzeug.exceptions import HTTPException
 from flask_cors import CORS
@@ -43,9 +43,10 @@ class semester(db.Model):
         self.type_of_pi=type_of_pi
         self.even_or_odd = even_or_odd
         self.career_code=career_code
+
 class semester_student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    semester_id = db.Column(db.Integer)
+    semester_num = db.Column(db.Integer)
     student_id= db.Column(db.Integer)
     def __init__(self,semester_id, student_id):
         self.semester_id=semester_id
@@ -95,7 +96,7 @@ semesters_schema = semester_schema_model(many=True)
 
 class semester_student_schema_model(ma.Schema):
     class Meta:
-        fields = ('id','semester_id','student_id')
+        fields = ('id','semester_num','student_id')
 semester_student_schema = semester_student_schema_model()
 semesters_students_schema = semester_student_schema_model(many=True)
 ####################
@@ -106,65 +107,65 @@ semesters_students_schema = semester_student_schema_model(many=True)
 @app.route('/', methods=['GET'])
 def main_api():
     return jsonify({"message":"You are in flask-mysql-api"})
-
-@app.route('/semesterstudent', methods=['Post'])
-def insert_sem_student():
-    try:
-        semester_id = request.json['semester_id']
-        student_id = request.json['student_id']
-        querysearch=semester.query.filter(semester.id.like(semester_id))
-        search = semesters_students_schema.dump(querysearch)
-        if(len(requests.get('http://crud-nodejs-1.herokuapp.com/allstudents/%s'%(int(student_id))).json())!=0):
-        
-            if search:
-            #aqui debo preguntarle a mariana si el id de alumno es valido
-
-                new_relation=semester_student(semester_id, student_id)
-                db.session.add(new_relation)
-                db.session.commit()  
-                res=semester_student_schema.dump(new_relation)
-                res_notif={"message": "200","data":res}
-                return jsonify(res_notif)
-            else:
-                return jsonify({"message":"This semester doesn't exist"})
+#app joke y mariana... 
+@app.route('/subjectcareer/name/<subject_name>', methods=['get'])
+def subject_career_name(subject_name):
+    mongo_res=requests.get('https://api-nodejs-mongod.herokuapp.com/subjects/name/%s'%((subject_name))).json()
+    print(subject_name)
+    if(len(mongo_res)!=0):
+        career_list=list()
+        car=list()
+        for i in range(len(mongo_res)):
+            career_list.append(str(mongo_res[i]['assigned_career']))
+            car.append(career.query.filter_by(career_code=career_list[i]))
+        resarray=list()
+        if(car):
+            for j in range(len(career_list)):
+                aux=career_schema.dump(car[j][0])
+                resarray.append(aux)
+            return jsonify({"search_subject":subject_name,"data_subject":mongo_res,"its career(s)": resarray})
         else:
-            return jsonify({"message":"This student doesn't exist"})
-    except KeyError:
-        return jsonify({"message":"There is a key error, please check variables"})
-@app.route('/semesterstudent/getsemsof/<id>', methods=['get'])
-def select_sems_of_student(id):
-    qres = semester_student.query.with_entities(semester_student.semester_id).filter(semester_student.student_id.like(id))
-    res=semesters_students_schema.dump(qres)
-
-    if(len(res)!=0):
-
-        array=list()
-        arrayres=list()
-        for i in range(len(res)):
-            array.append(res[i]["semester_id"])
-        for k in range(len(array)):
-            sem1 = semester.query.filter(semester.id.like(array[k]))
-            arrayres.append(semesters_schema.dump(sem1)[0])
-        return str(arrayres)
+            return jsonify({"message":"That career doesn't exist"})
     else:
-        response= {
-        "message":"This student_id are not registred in semesters_student"
-    }   
-        return jsonify(response) 
-@app.route('/semesterstudent/getstudentsof/<id>', methods=['get'])
-def select_students_of_sem(id):
-    queryres = semester_student.query.with_entities(semester_student.student_id).filter(semester_student.semester_id.like(id))
-    res=semesters_students_schema.dump(queryres)
-    if(len(res)!=0):
-        array=list()
-        for i in range(len(res)):
-            array.append(res[i]["student_id"])
-        return str(array)
+        return jsonify({"message":"This subject code doesn't exist"})
+
+
+@app.route('/semesterteacher/subject/<subject_name>', methods=['get'])
+def semester_teacher_name(subject_name):
+
+    node_res=requests.get('https://api-nodejs-mongod.herokuapp.com/subjects/name/%s'%((subject_name))).json()
+    if(len(node_res)!=0):
+        career_list=list()
+        career_res=list()
+        sem_list=list()
+        sem_res=list()
+        teachers=list()
+        
+        for i in range(len(node_res)):
+            career_list.append(str(node_res[i]['assigned_career']))
+            career_res.append(career.query.filter_by(career_code=career_list[i]))
+            sem_list.append(int(node_res[i]['semester_num']))
+            sem_res.append(semester.query.filter_by(semester_num=sem_list[i]))
+            teachers.append(str(node_res[i]['teacher_id']))
+        resarray=list()
+        semres=list()
+        if(career_res):
+            for j in range(len(career_list)):
+                aux=career_schema.dump(career_res[j][0])
+                resarray.append(aux)
+                aux2=career_schema.dump(career_res[j][0])
+                semres.append(aux2)
+            #jsongen
+            jsongen=list()
+            for e in range(len(teachers)):
+                jsongen.append({"teacher_code":teachers[e],"assigned semesters":semres[e],"career in charge": resarray[e]})
+            return jsonify({"search_subject":subject_name,"info":jsongen})
+        else:
+            return jsonify({"message":"That career doesn't exist"})
     else:
-        response= {
-        "message":"There was an error in ID, please check"
-    }   
-        return jsonify(response) 
+        return jsonify({"message":"This subject name doesn't exist"})
+
+
 @app.route('/semester', methods=['Post'])
 def create_sem():
     try:
@@ -178,8 +179,6 @@ def create_sem():
         type_of_pi= request.json['type_of_pi']
         even_or_odd = request.json['even_or_odd']
         career_code=request.json['career_code']
-
-
         new_semester= semester(degree,study_plan_id,semester_num,career,number_of_assignatures,classroom,building,type_of_pi,even_or_odd,career_code)
 
         db.session.add(new_semester)
@@ -190,7 +189,6 @@ def create_sem():
     except KeyError:
         return jsonify({"message":"There is a key error, please check variables"})
     
-
 
 @app.route('/semester', methods=['GET'])
 def get_sems():
@@ -405,7 +403,5 @@ def delete_career(id):
         return jsonify(res_notif)
     else:
         return jsonify({"message":"There was an error in ID, please check"}) 
-
-
 if __name__=="__main__":
     app.run(threaded=True,host="0.0.0.0")
