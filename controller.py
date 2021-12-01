@@ -133,7 +133,8 @@ def subject_career_name(subject_name):
 @app.route('/semesterteacher/subject/<subject_name>', methods=['get'])
 def semester_teacher_name(subject_name):
 
-    node_res=requests.get('https://api-nodejs-mongod.herokuapp.com/subjects/name/%s'%((subject_name))).json()
+    node_res0=requests.get('https://crud-nodejs-1.herokuapp.com/subject/%s/teachers/'%((subject_name))).json()
+    node_res=node_res0['subjects']
     if(len(node_res)!=0):
         career_list=list()
         career_res=list()
